@@ -4,6 +4,9 @@ import "gorm.io/gorm"
 
 type Repository interface {
 	SavePlant(plant Plant) (Plant, error)
+	FetchUserPlant(ID int) (Plant, error)
+	FindByID(ID int) (Plant, error)
+	Update(plan Plant) (Plant, error)
 }
 
 type repository struct {
@@ -16,6 +19,31 @@ func NewRepository(db *gorm.DB) *repository {
 
 func (r *repository) SavePlant(plant Plant) (Plant, error) {
 	err := r.db.Create(&plant).Error
+	if err != nil {
+		return plant, err
+	}
+	return plant, nil
+}
+func (r *repository) FetchUserPlant(ID int) (Plant, error) {
+	var plant Plant
+	err := r.db.Preload("PlantType").Where("user_id = ?", ID).Find(&plant).Error
+
+	if err != nil {
+		return plant, err
+	}
+	return plant, nil
+}
+func (r *repository) FindByID(ID int) (Plant, error) {
+	var plant Plant
+	err := r.db.Where("id = ?", ID).Find(&plant).Error
+	if err != nil {
+		return plant, err
+	}
+	return plant, nil
+}
+
+func (r *repository) Update(plant Plant) (Plant, error) {
+	err := r.db.Save(&plant).Error
 	if err != nil {
 		return plant, err
 	}

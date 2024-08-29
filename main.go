@@ -28,7 +28,7 @@ func main() {
 	userService := user.NewService(userRepository, plantService)
 	authService := auth.NewService()
 	userHandler := handler.NewUserHandler(userService, authService)
-
+	plantHandler := handler.NewPlantHandler(plantService)
 	router := gin.Default()
 	// router.Use(cors.Default())
 
@@ -38,6 +38,8 @@ func main() {
 	api.GET("/users/fetch", authMiddleware(authService, userService), userHandler.FetchUser)
 	api.POST("/email-checkers", userHandler.CheckEmailAvailability)
 	api.POST("/avatars", authMiddleware(authService, userService), userHandler.UploadAvatar)
+	api.GET("/plants", authMiddleware(authService, userService), plantHandler.GetUserPlant)
+	api.POST("/watering", authMiddleware(authService, userService), userHandler.AddWater)
 
 	router.Run()
 }

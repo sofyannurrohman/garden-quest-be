@@ -15,6 +15,10 @@ type CheckEmailInput struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
+type UpdateUserInput struct {
+	WaterEnergy int `json:"water_energy" `
+}
+
 type FormCreateUserInput struct {
 	Name     string `form:"name" binding:"required"`
 	Email    string `form:"email" binding:"required,email"`

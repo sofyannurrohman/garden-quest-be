@@ -14,7 +14,7 @@ type Service interface {
 	SaveAvatar(ID int, fileLocation string) (User, error)
 	GetUserByID(ID int) (User, error)
 	GetAllUser() ([]User, error)
-	UpdateUser(input FormUpdateUserInput) (User, error)
+	AddWater(userID int, input UpdateUserInput) (User, error)
 }
 type service struct {
 	repository   Repository
@@ -109,15 +109,24 @@ func (s *service) GetAllUser() ([]User, error) {
 	}
 	return users, nil
 }
-func (s *service) UpdateUser(input FormUpdateUserInput) (User, error) {
-
-	user, err := s.repository.FindByID(input.ID)
+func (s *service) AddWater(userID int, input UpdateUserInput) (User, error) {
+	user, err := s.repository.FindByID(userID)
 	if err != nil {
 		return user, err
 	}
-	user.Name = input.Name
-	user.Email = input.Email
+	plant, err := s.plantService.GetUserPlant(userID)
+	if err != nil {
+		return user, err
+	}
+	user.WaterEnergy -= input.WaterEnergy
+	newWaterCount := plant.WateringCount + input.WaterEnergy
 
+	plant.WateringCount = newWaterCount
+
+	_, err = s.plantService.UpdatePlant(plant)
+	if err != nil {
+		return user, err
+	}
 	updatedUser, err := s.repository.Update(user)
 	if err != nil {
 		return updatedUser, err
