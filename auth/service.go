@@ -13,7 +13,7 @@ type Service interface {
 type jwtService struct {
 }
 
-var SECRET_KEY = []byte()
+var SECRET_KEY = []byte("")
 
 func NewService() *jwtService {
 	return &jwtService{}
