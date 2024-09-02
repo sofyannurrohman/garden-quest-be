@@ -3,7 +3,9 @@ package plant
 type Service interface {
 	CreatePlant(ID int) (Plant, error)
 	GetUserPlant(ID int) (Plant, error)
+	GetPlantTypeByID(ID int) (PlantType, error)
 	UpdatePlant(plan Plant) (Plant, error)
+	CreateUserPlant(userID int, input BuyPlant) (UserPlant, error)
 }
 
 type service struct {
@@ -36,6 +38,15 @@ func (s *service) GetUserPlant(ID int) (Plant, error) {
 	return plant, nil
 }
 
+func (s *service) GetPlantTypeByID(ID int) (PlantType, error) {
+
+	plantType, err := s.repository.FindPlantTypeByID(ID)
+	if err != nil {
+		return plantType, err
+	}
+	return plantType, nil
+}
+
 func (s *service) UpdatePlant(plant Plant) (Plant, error) {
 
 	updatedPlant, err := s.repository.Update(plant)
@@ -43,4 +54,16 @@ func (s *service) UpdatePlant(plant Plant) (Plant, error) {
 		return updatedPlant, err
 	}
 	return updatedPlant, nil
+}
+
+func (s *service) CreateUserPlant(userID int, input BuyPlant) (UserPlant, error) {
+	userPlant := UserPlant{}
+	userPlant.PlantTypeID = input.PlantTypeID
+	userPlant.UserID = userID
+
+	newUserPlant, err := s.repository.SaveUserPlant(userPlant)
+	if err != nil {
+		return newUserPlant, err
+	}
+	return newUserPlant, nil
 }

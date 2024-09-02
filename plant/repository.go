@@ -7,6 +7,9 @@ type Repository interface {
 	FetchUserPlant(ID int) (Plant, error)
 	FindByID(ID int) (Plant, error)
 	Update(plan Plant) (Plant, error)
+	FindAllPlantType() ([]PlantType, error)
+	FindPlantTypeByID(ID int) (PlantType, error)
+	SaveUserPlant(userPlant UserPlant) (UserPlant, error)
 }
 
 type repository struct {
@@ -48,4 +51,30 @@ func (r *repository) Update(plant Plant) (Plant, error) {
 		return plant, err
 	}
 	return plant, nil
+}
+
+func (r *repository) FindPlantTypeByID(ID int) (PlantType, error) {
+	var plantType PlantType
+	err := r.db.Where("id = ?", ID).Find(&plantType).Error
+	if err != nil {
+		return plantType, err
+	}
+	return plantType, nil
+}
+
+func (r *repository) FindAllPlantType() ([]PlantType, error) {
+	var plantType []PlantType
+	err := r.db.Find(&plantType).Error
+	if err != nil {
+		return plantType, err
+	}
+	return plantType, nil
+}
+
+func (r *repository) SaveUserPlant(userPlant UserPlant) (UserPlant, error) {
+	err := r.db.Create(&userPlant).Error
+	if err != nil {
+		return userPlant, err
+	}
+	return userPlant, nil
 }

@@ -15,3 +15,10 @@ type PlantType struct {
 	CoinProduced int    `json:"coin_produced"`
 	Price        int    `json:"price"`
 }
+
+type UserPlant struct {
+	ID          int
+	UserID      int
+	PlantTypeID int
+	PlantType   PlantType
+}

@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"garden-quest/auth"
 	"garden-quest/helper"
+	"garden-quest/plant"
 	"garden-quest/user"
+	"garden-quest/water"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -191,6 +194,92 @@ func (h *userHandler) AddWater(c *gin.Context) {
 		return
 	}
 	response := helper.APIResponse("Successfully watering the plant", http.StatusOK, "success", newUser)
+	c.JSON(http.StatusOK, response)
+
+}
+
+func (h *userHandler) AddEnergy(c *gin.Context) {
+	ID := c.Param("userID")
+	userID, _ := strconv.Atoi(ID)
+
+	getUser, err := h.userService.GetUserByID(userID)
+	if err != nil {
+		errorMessage := gin.H{"errors": "Server Error"}
+		response := helper.APIResponse("User not found", http.StatusNotFound, "error", errorMessage)
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+
+	var input user.AddEnergy
+	err = c.ShouldBindJSON(&input)
+	if err != nil {
+		errorMessage := gin.H{"errors": "Server Error"}
+		response := helper.APIResponse("Add Energy Water failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+	newUser, err := h.userService.AddEnergy(getUser.ID, input)
+	if err != nil {
+		errorMessage := gin.H{"errors": "Server Error"}
+		response := helper.APIResponse("Add Energy Water failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+	response := helper.APIResponse("Successfully Add Water Energy", http.StatusOK, "success", newUser)
+	c.JSON(http.StatusOK, response)
+
+}
+
+func (h *userHandler) BuyPlantType(c *gin.Context) {
+	// api/v1/users/1/plants/2
+	currentUser := c.MustGet("currentUser").(user.User)
+	userID := currentUser.ID
+	var input plant.BuyPlant
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		response := helper.APIResponse("Buy plant failed", http.StatusUnprocessableEntity, "error", err)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+	newUser, err := h.userService.BuyPlantType(userID, input)
+	if err != nil {
+		errorMessage := gin.H{"errors": "Server Error"}
+		response := helper.APIResponse("Buy plant failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+	response := helper.APIResponse("Successfully buy the plant", http.StatusOK, "success", newUser)
+	c.JSON(http.StatusOK, response)
+
+}
+
+func (h *userHandler) BuyWaterEnergy(c *gin.Context) {
+	currentUser := c.MustGet("currentUser").(user.User)
+	userID := currentUser.ID
+	getUser, err := h.userService.GetUserByID(userID)
+	if err != nil {
+		errorMessage := gin.H{"errors": "Server Error"}
+		response := helper.APIResponse("User not found", http.StatusNotFound, "error", errorMessage)
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+
+	var input water.BuyWaterEnergy
+	err = c.ShouldBindJSON(&input)
+	if err != nil {
+		errorMessage := gin.H{"errors": "Server Error"}
+		response := helper.APIResponse("Buy water energy is failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+	newUser, err := h.userService.BuyWaterEnergy(getUser.ID, input)
+	if err != nil {
+		errorMessage := gin.H{"errors": "Server Error"}
+		response := helper.APIResponse("Buy water energy is failed failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+	response := helper.APIResponse("Successfully Buy Water Energy", http.StatusOK, "success", newUser)
 	c.JSON(http.StatusOK, response)
 
 }

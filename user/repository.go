@@ -10,6 +10,7 @@ type Repository interface {
 	FindByID(ID int) (User, error)
 	Update(user User) (User, error)
 	FindAll() ([]User, error)
+	Inventory(userID int) (Inventory, error)
 }
 
 type repository struct {
@@ -57,4 +58,12 @@ func (r *repository) FindAll() ([]User, error) {
 		return users, err
 	}
 	return users, nil
+}
+func (r *repository) Inventory(userID int) (Inventory, error) {
+	var inventory Inventory
+	err := r.db.Preload("UserPlants").Preload("UsersWater").Where("user_id=?", userID).First(&inventory).Error
+	if err != nil {
+		return inventory, err
+	}
+	return inventory, nil
 }

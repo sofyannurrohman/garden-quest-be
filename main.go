@@ -5,7 +5,9 @@ import (
 	"garden-quest/handler"
 	"garden-quest/helper"
 	"garden-quest/plant"
+	"garden-quest/transaction"
 	"garden-quest/user"
+	"garden-quest/water"
 	"log"
 	"net/http"
 	"strings"
@@ -22,13 +24,22 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	// Repository
 	userRepository := user.NewRepository(db)
 	plantRepository := plant.NewRepository(db)
+	waterRepository := water.NewRepository(db)
+	transactionRepository := transaction.NewRepository(db)
+	//Service
 	plantService := plant.NewService(plantRepository)
-	userService := user.NewService(userRepository, plantService)
+	waterService := water.NewService(waterRepository)
+	userService := user.NewService(userRepository, plantService, waterRepository, waterService)
 	authService := auth.NewService()
+	transactionService := transaction.NewService(transactionRepository)
+	// Handler
 	userHandler := handler.NewUserHandler(userService, authService)
 	plantHandler := handler.NewPlantHandler(plantService)
+	transactionHandler := handler.NewTransactionHandler(transactionService)
 	router := gin.Default()
 	// router.Use(cors.Default())
 
@@ -40,6 +51,13 @@ func main() {
 	api.POST("/avatars", authMiddleware(authService, userService), userHandler.UploadAvatar)
 	api.GET("/plants", authMiddleware(authService, userService), plantHandler.GetUserPlant)
 	api.POST("/watering", authMiddleware(authService, userService), userHandler.AddWater)
+	api.POST("/energy/:userID", userHandler.AddEnergy)
+	api.POST("/buy/plants", userHandler.BuyPlantType)
+	api.POST("/buy/energy", userHandler.BuyWaterEnergy)
+
+	// api.GET("/transactions", authMiddleware(authService, userService), transactionHandler)
+	api.POST("/transactions", authMiddleware(authService, userService), transactionHandler.CreateTransaction)
+	api.GET("/inventory", authMiddleware(authService, userService))
 
 	router.Run()
 }

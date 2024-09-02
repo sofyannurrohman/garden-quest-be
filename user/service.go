@@ -3,6 +3,7 @@ package user
 import (
 	"errors"
 	"garden-quest/plant"
+	"garden-quest/water"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -15,14 +16,19 @@ type Service interface {
 	GetUserByID(ID int) (User, error)
 	GetAllUser() ([]User, error)
 	AddWater(userID int, input UpdateUserInput) (User, error)
+	AddEnergy(userID int, input AddEnergy) (User, error)
+	BuyWaterEnergy(userID int, input water.BuyWaterEnergy) (User, error)
+	BuyPlantType(userID int, input plant.BuyPlant) (User, error)
 }
 type service struct {
-	repository   Repository
-	plantService plant.Service
+	repository      Repository
+	plantService    plant.Service
+	waterRepository water.Repository
+	waterService    water.Service
 }
 
-func NewService(repository Repository, plantService plant.Service) *service {
-	return &service{repository, plantService}
+func NewService(repository Repository, plantService plant.Service, waterRepository water.Repository, waterService water.Service) *service {
+	return &service{repository, plantService, waterRepository, waterService}
 }
 
 func (s *service) RegisterUser(input RegisterUserInput) (User, error) {
@@ -132,4 +138,65 @@ func (s *service) AddWater(userID int, input UpdateUserInput) (User, error) {
 		return updatedUser, err
 	}
 	return updatedUser, nil
+}
+
+func (s *service) AddEnergy(userID int, input AddEnergy) (User, error) {
+	user, err := s.GetUserByID(userID)
+	if err != nil {
+		return user, err
+	}
+	user.WaterEnergy += input.AddWaterEnergy
+	newUser, err := s.repository.Update(user)
+	if err != nil {
+		return newUser, err
+	}
+	return newUser, nil
+}
+
+func (s *service) BuyWaterEnergy(userID int, input water.BuyWaterEnergy) (User, error) {
+	user, err := s.GetUserByID(userID)
+	if err != nil {
+		return user, err
+	}
+	waterType, err := s.waterRepository.GetByID(input.WaterEnergyTypeID)
+	if err != nil {
+		return user, err
+	}
+	user.Coins -= waterType.Price
+	input.Qty = 1
+	s.waterService.CreateUserWater(userID, input)
+	newUser, err := s.repository.Update(user)
+	if err != nil {
+		return user, err
+	}
+	return newUser, nil
+}
+
+func (s *service) BuyPlantType(userID int, input plant.BuyPlant) (User, error) {
+	user, err := s.GetUserByID(userID)
+	if err != nil {
+		return user, err
+	}
+	plant, err := s.plantService.GetUserPlant(userID)
+	if err != nil {
+		return user, err
+	}
+	planType, err := s.plantService.GetPlantTypeByID(input.PlantTypeID)
+	if err != nil {
+		return user, err
+	}
+	if user.Coins < planType.Price {
+		return user, err
+	}
+	user.Coins -= planType.Price
+	s.plantService.CreateUserPlant(userID, input)
+	_, err = s.plantService.UpdatePlant(plant)
+	if err != nil {
+		return user, err
+	}
+	newUser, err := s.repository.Update(user)
+	if err != nil {
+		return newUser, err
+	}
+	return newUser, err
 }
