@@ -16,9 +16,4 @@ type PlantType struct {
 	Price        int    `json:"price"`
 }
 
-type UserPlant struct {
-	ID          int
-	UserID      int
-	PlantTypeID int
-	PlantType   PlantType
-}
+

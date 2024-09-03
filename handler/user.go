@@ -231,7 +231,7 @@ func (h *userHandler) AddEnergy(c *gin.Context) {
 }
 
 func (h *userHandler) BuyPlantType(c *gin.Context) {
-	// api/v1/users/1/plants/2
+	// api/v1/plants/2
 	currentUser := c.MustGet("currentUser").(user.User)
 	userID := currentUser.ID
 	var input plant.BuyPlant
@@ -241,14 +241,14 @@ func (h *userHandler) BuyPlantType(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
-	newUser, err := h.userService.BuyPlantType(userID, input)
+	newPlant, err := h.userService.BuyPlantType(userID, input)
 	if err != nil {
 		errorMessage := gin.H{"errors": "Server Error"}
 		response := helper.APIResponse("Buy plant failed", http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
-	response := helper.APIResponse("Successfully buy the plant", http.StatusOK, "success", newUser)
+	response := helper.APIResponse("Successfully buy the plant", http.StatusOK, "success", newPlant)
 	c.JSON(http.StatusOK, response)
 
 }
@@ -282,4 +282,18 @@ func (h *userHandler) BuyWaterEnergy(c *gin.Context) {
 	response := helper.APIResponse("Successfully Buy Water Energy", http.StatusOK, "success", newUser)
 	c.JSON(http.StatusOK, response)
 
+}
+func (h *userHandler) GetInventory(c *gin.Context) {
+	ID := c.Param("userID")
+	userID, _ := strconv.Atoi(ID)
+	inventory, err := h.userService.GetInventory(userID)
+	if err != nil {
+		errorMessage := gin.H{"errors": "Server Error"}
+		response := helper.APIResponse("Get inventory failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	response := helper.APIResponse("Successfully get inventory", http.StatusOK, "success", inventory)
+	c.JSON(http.StatusOK, response)
 }

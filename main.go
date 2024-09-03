@@ -52,13 +52,12 @@ func main() {
 	api.GET("/plants", authMiddleware(authService, userService), plantHandler.GetUserPlant)
 	api.POST("/watering", authMiddleware(authService, userService), userHandler.AddWater)
 	api.POST("/energy/:userID", userHandler.AddEnergy)
-	api.POST("/buy/plants", userHandler.BuyPlantType)
-	api.POST("/buy/energy", userHandler.BuyWaterEnergy)
+	api.POST("/buy/plants", authMiddleware(authService, userService), userHandler.BuyPlantType)
+	api.POST("/buy/waters", authMiddleware(authService, userService), userHandler.BuyWaterEnergy)
 
 	// api.GET("/transactions", authMiddleware(authService, userService), transactionHandler)
 	api.POST("/transactions", authMiddleware(authService, userService), transactionHandler.CreateTransaction)
-	api.GET("/inventory", authMiddleware(authService, userService))
-
+	api.GET("/users/:userID/inventory", userHandler.GetInventory)
 	router.Run()
 }
 

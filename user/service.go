@@ -17,8 +17,9 @@ type Service interface {
 	GetAllUser() ([]User, error)
 	AddWater(userID int, input UpdateUserInput) (User, error)
 	AddEnergy(userID int, input AddEnergy) (User, error)
-	BuyWaterEnergy(userID int, input water.BuyWaterEnergy) (User, error)
-	BuyPlantType(userID int, input plant.BuyPlant) (User, error)
+	BuyWaterEnergy(userID int, input water.BuyWaterEnergy) (water.UserWater, error)
+	BuyPlantType(userID int, input plant.BuyPlant) (plant.Plant, error)
+	GetInventory(userID int) (Inventory, error)
 }
 type service struct {
 	repository      Repository
@@ -153,50 +154,67 @@ func (s *service) AddEnergy(userID int, input AddEnergy) (User, error) {
 	return newUser, nil
 }
 
-func (s *service) BuyWaterEnergy(userID int, input water.BuyWaterEnergy) (User, error) {
+func (s *service) BuyWaterEnergy(userID int, input water.BuyWaterEnergy) (water.UserWater, error) {
 	user, err := s.GetUserByID(userID)
 	if err != nil {
-		return user, err
+		return water.UserWater{}, err
 	}
 	waterType, err := s.waterRepository.GetByID(input.WaterEnergyTypeID)
 	if err != nil {
-		return user, err
+		return water.UserWater{}, err
 	}
-	user.Coins -= waterType.Price
-	input.Qty = 1
-	s.waterService.CreateUserWater(userID, input)
-	newUser, err := s.repository.Update(user)
+	price := waterType.Price * input.Qty
+	if user.Coins < price {
+		return water.UserWater{}, err
+	}
+	user.Coins -= price
+	newWater, err := s.waterService.CreateUserWater(userID, input)
 	if err != nil {
-		return user, err
+		return water.UserWater{}, err
 	}
-	return newUser, nil
+	_, err = s.repository.Update(user)
+	if err != nil {
+		return water.UserWater{}, err
+	}
+	return newWater, nil
 }
 
-func (s *service) BuyPlantType(userID int, input plant.BuyPlant) (User, error) {
+func (s *service) BuyPlantType(userID int, input plant.BuyPlant) (plant.Plant, error) {
 	user, err := s.GetUserByID(userID)
 	if err != nil {
-		return user, err
-	}
-	plant, err := s.plantService.GetUserPlant(userID)
-	if err != nil {
-		return user, err
+		return plant.Plant{}, err
 	}
 	planType, err := s.plantService.GetPlantTypeByID(input.PlantTypeID)
 	if err != nil {
-		return user, err
+		return plant.Plant{}, err
 	}
 	if user.Coins < planType.Price {
-		return user, err
+		return plant.Plant{}, err
 	}
 	user.Coins -= planType.Price
-	s.plantService.CreateUserPlant(userID, input)
-	_, err = s.plantService.UpdatePlant(plant)
+	newPlant, err := s.plantService.CreateUserPlant(userID, input)
 	if err != nil {
-		return user, err
+		return newPlant, err
 	}
-	newUser, err := s.repository.Update(user)
+	_, err = s.repository.Update(user)
 	if err != nil {
-		return newUser, err
+		return newPlant, err
 	}
-	return newUser, err
+	return newPlant, err
+}
+
+func (s *service) GetInventory(userID int) (Inventory, error) {
+
+	userPlants, err := s.repository.FindAllPlants(userID)
+	if err != nil {
+		return Inventory{}, err
+	}
+	waters, err := s.repository.FindAllWaters(userID)
+	if err != nil {
+		return Inventory{}, err
+	}
+	inventory := Inventory{}
+	inventory.Plants = userPlants
+	inventory.Waters = waters
+	return inventory, nil
 }

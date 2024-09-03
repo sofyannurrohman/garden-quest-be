@@ -1,6 +1,9 @@
 package user
 
 import (
+	"garden-quest/plant"
+	"garden-quest/water"
+
 	"gorm.io/gorm"
 )
 
@@ -10,7 +13,8 @@ type Repository interface {
 	FindByID(ID int) (User, error)
 	Update(user User) (User, error)
 	FindAll() ([]User, error)
-	Inventory(userID int) (Inventory, error)
+	FindAllPlants(userID int) ([]plant.Plant, error)
+	FindAllWaters(userID int) ([]water.UserWater, error)
 }
 
 type repository struct {
@@ -59,11 +63,20 @@ func (r *repository) FindAll() ([]User, error) {
 	}
 	return users, nil
 }
-func (r *repository) Inventory(userID int) (Inventory, error) {
-	var inventory Inventory
-	err := r.db.Preload("UserPlants").Preload("UsersWater").Where("user_id=?", userID).First(&inventory).Error
+func (r *repository) FindAllPlants(userID int) ([]plant.Plant, error) {
+	var plants []plant.Plant
+	err := r.db.Where("user_id = ?", userID).Find(&plants).Error
 	if err != nil {
-		return inventory, err
+		return []plant.Plant{}, err
 	}
-	return inventory, nil
+	return plants, nil
+}
+
+func (r *repository) FindAllWaters(userID int) ([]water.UserWater, error) {
+	var waters []water.UserWater
+	err := r.db.Where("user_id = ?", userID).Find(&waters).Error
+	if err != nil {
+		return []water.UserWater{}, err
+	}
+	return waters, nil
 }

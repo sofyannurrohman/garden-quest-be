@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	ID             int `gorm:"primaryKey"`
+	ID             int `gorm:"primary_key"`
 	Name           string
 	Email          string
 	PasswordHash   string
@@ -20,7 +20,6 @@ type User struct {
 }
 
 type Inventory struct {
-	UserID     int
-	UserPlants []plant.UserPlant
-	UserWaters []water.UserWater
+	Plants []plant.Plant
+	Waters []water.UserWater
 }

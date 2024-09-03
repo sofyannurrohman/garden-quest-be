@@ -1,7 +1,7 @@
 package water
 
-type Water struct {
-	ID             int
+type WaterType struct {
+	ID             int `gorm:"primary_key"`
 	Name           string
 	Description    string
 	AddWaterEnergy int
@@ -13,5 +13,5 @@ type UserWater struct {
 	WaterEnergyTypeID int
 	Qty               int
 	UserID            int
-	Water             Water
+	Water             WaterType `gorm:"foreignKey:WaterEnergyTypeID"`
 }

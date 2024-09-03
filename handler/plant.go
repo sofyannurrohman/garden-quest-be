@@ -31,4 +31,3 @@ func (h *plantHandler) GetUserPlant(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-

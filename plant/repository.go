@@ -9,7 +9,7 @@ type Repository interface {
 	Update(plan Plant) (Plant, error)
 	FindAllPlantType() ([]PlantType, error)
 	FindPlantTypeByID(ID int) (PlantType, error)
-	SaveUserPlant(userPlant UserPlant) (UserPlant, error)
+	SaveUserPlant(userPlant Plant) (Plant, error)
 }
 
 type repository struct {
@@ -71,7 +71,7 @@ func (r *repository) FindAllPlantType() ([]PlantType, error) {
 	return plantType, nil
 }
 
-func (r *repository) SaveUserPlant(userPlant UserPlant) (UserPlant, error) {
+func (r *repository) SaveUserPlant(userPlant Plant) (Plant, error) {
 	err := r.db.Create(&userPlant).Error
 	if err != nil {
 		return userPlant, err

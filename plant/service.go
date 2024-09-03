@@ -5,7 +5,7 @@ type Service interface {
 	GetUserPlant(ID int) (Plant, error)
 	GetPlantTypeByID(ID int) (PlantType, error)
 	UpdatePlant(plan Plant) (Plant, error)
-	CreateUserPlant(userID int, input BuyPlant) (UserPlant, error)
+	CreateUserPlant(userID int, input BuyPlant) (Plant, error)
 }
 
 type service struct {
@@ -56,12 +56,13 @@ func (s *service) UpdatePlant(plant Plant) (Plant, error) {
 	return updatedPlant, nil
 }
 
-func (s *service) CreateUserPlant(userID int, input BuyPlant) (UserPlant, error) {
-	userPlant := UserPlant{}
+func (s *service) CreateUserPlant(userID int, input BuyPlant) (Plant, error) {
+	userPlant := Plant{}
 	userPlant.PlantTypeID = input.PlantTypeID
 	userPlant.UserID = userID
-
-	newUserPlant, err := s.repository.SaveUserPlant(userPlant)
+	userPlant.WateringCount = 0
+	userPlant.PlantType, _ = s.GetPlantTypeByID(userPlant.PlantTypeID)
+	newUserPlant, err := s.repository.SavePlant(userPlant)
 	if err != nil {
 		return newUserPlant, err
 	}
